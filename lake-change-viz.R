@@ -3,8 +3,8 @@
 ## For GLEON GSA
 ## Thurs Oct 6, 2022
 
-install.packages(c('tidyverse','lubridate','data.table','sf','spData','scales',
-                   'ggdark','scico','gganimate'))
+#install.packages(c('tidyverse','lubridate','data.table','sf','spData','scales',
+#                   'ggdark','scico','gganimate'))
 
 library(tidyverse)
 library(lubridate) # dates
@@ -21,6 +21,7 @@ library(scico) # color scales
 ## (https://portal.edirepository.org/nis/mapbrowse?packageid=edi.394.4) contains
 ## lake surface area data for over 1.42 million lakes globally from 1995-2015,
 ## in terms of seasonal, permanent, and total surface water.
+## Labou, S.G., M.F. Meyer, M.R. Brousil, A.N. Cramer, and B.T. Luff. 2020. Global lake area, climate, and population dataset ver 4. Environmental Data Initiative. https://doi.org/10.6073/pasta/834e2d4e8ee7eb2fa9a5a5b32d759683 (Accessed 2022-10-06).
 
 ## This script builds off of data processing steps 1 & 2 documented in
 ## https://github.com/USGS-VIZLAB/chart-challenge-22/blob/main/14_3D_mfmeyer/three_dimensional.R
@@ -53,7 +54,6 @@ unique(glcp_sf$REGION)
 loc_filter <- 'Midwest'
 glcp_region <- glcp_sf |>
   filter(REGION == loc_filter)
-glcp_region
 
 length(unique(glcp_region$Hylak_id)) # number of lakes
 
@@ -71,6 +71,7 @@ glcp_region |>
   geom_line()
 # yikes!
 
+theme_set(theme_classic(base_size = 16))
 
 # Z-score lake surface areas ----------------------------------------------
 
@@ -79,7 +80,7 @@ glcp_region |>
 glcp_scaled <- glcp_region |>
   group_by(Hylak_id) |>
   mutate(across(contains("_km2"), ~as.vector(scale(.x)), .names = "{.col}_scale"))
-str(glcp_scaled)
+colnames(glcp_scaled)
 
 glcp_scaled |>
   ggplot(
@@ -107,14 +108,14 @@ glcp_scaled |>
   theme_void() +
   # scico color palettes: https://github.com/thomasp85/scico
   scale_color_scico(palette = "broc",
-                    direction = -1,
+                    #direction = -1,
                     # custom legend labels
-                    breaks = scales::extended_breaks(5),
+                    #breaks = scales::extended_breaks(5),
                     # 0 represents mean lake area over the time period
-                    labels = c('smaller','', '', '', 'bigger')
+                    #labels = c('smaller','', '', '', 'bigger')
                     ) +
   facet_wrap(~year, nrow = 3,
-             strip.position = "bottom" # move year labels
+             #strip.position = "bottom" # move year labels
              )# +
   #dark_theme_void() +
   #theme(legend.position = "top",
@@ -167,7 +168,6 @@ mendota_past <- mendota |>
   filter(year < 1991) |>
   group_by(yday) |>
   summarize(hist_mean = mean(surftemp))
-mendota_past
 
 ## Join with data from 1991 - 2020 and calculate difference in degrees
 mendota_diff <- mendota |>
@@ -224,7 +224,7 @@ month_labels <- mendota_diff |>
   group_by(month) |>
   summarize(month_start = min(yday))
 
-anim <- mendota_diff |>
+mendota_diff |>
   ggplot(aes(yday, surftemp_diff)) +
   geom_point(size = 2, aes(color = surftemp_diff, group = year)) +
   scale_color_scico(palette = "vik", direction = 1,
@@ -243,7 +243,8 @@ anim <- mendota_diff |>
   # animate in time
   transition_time(year) + # try transition_reveal
   shadow_mark(alpha = 0.75) +
-  ggtitle("{as.integer(frame_time)}") +
+  ggtitle("Lake Mendota") +
+  #ggtitle("{as.integer(frame_time)}") +
   # style legend
   guides(
     color = guide_colorbar(
